@@ -13,7 +13,7 @@ from telegram.ext import (
     ContextTypes,
 )
 
-from questions import QUICK_CHECK
+from questions import QUICK_CHECK, HABIT_CHECK
 
 load_dotenv(override=True)
 TOKEN = os.getenv("BOT_TOKEN")
@@ -120,6 +120,62 @@ async def show_completion(query):
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
+# Display the current Habit Check statement
+async def show_habit_question(query, context):
+    index = context.user_data["habit_index"]
+
+    if index >= len(HABIT_CHECK):
+        await show_habit_completion(query)
+        return
+
+    statement = HABIT_CHECK[index]
+
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                str(rating),
+                callback_data=f"habit_answer_{rating}"
+            )
+            for rating in range(1, 6)
+        ]
+    ]
+
+    message = (
+        f"🧠 Habit Check — Statement {index + 1}/10\n\n"
+        f"{statement}\n\n"
+        "How much do you agree?\n\n"
+        "1 — Strongly disagree\n"
+        "2 — Disagree\n"
+        "3 — Neither agree nor disagree\n"
+        "4 — Agree\n"
+        "5 — Strongly agree"
+    )
+
+    await query.edit_message_text(
+        message,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+
+# Display the Habit Check completion message
+async def show_habit_completion(query):
+    keyboard = [[
+        InlineKeyboardButton(
+            "🚀 Continue to AI Challenge",
+            callback_data="ai_challenge"
+        )
+    ]]
+
+    await query.edit_message_text(
+        "✅ Habit Check completed!\n\n"
+        "You've answered all 10 statements.\n\n"
+        "Next, you'll complete a reasoning task where "
+        "you are allowed to use AI.\n\n"
+        "Later, you'll complete a similar task without AI "
+        "and reflect on the experience.",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
 
 # Handle button clicks
 async def button_handler(
@@ -208,13 +264,49 @@ async def button_handler(
 
         await show_question(query, context)
 
+    
     elif data == "habit_check":
+        context.user_data["habit_index"] = 0
+        context.user_data["habit_answers"] = []
+
+        await show_habit_question(query, context)
+
+    elif data.startswith("habit_answer_"):
+        if "habit_index" not in context.user_data:
+            await query.edit_message_text(
+                "Session expired. Send /start to begin again."
+            )
+            return
+
+        index = context.user_data["habit_index"]
+
+        if index >= len(HABIT_CHECK):
+            return
+
+        try:
+            rating = int(data.split("_")[-1])
+        except ValueError:
+            return
+
+        if rating not in range(1, 6):
+            return
+
+        # Save the selected rating
+        context.user_data["habit_answers"].append(rating)
+
+        # Move to the next statement
+        context.user_data["habit_index"] += 1
+
+        await show_habit_question(query, context)
+
+    elif data == "ai_challenge":
         await query.edit_message_text(
-            "🧠 Habit Check\n\n"
-            "In this section, you'll answer 10 statements "
-            "about your AI-use habits using a 1–5 scale.\n\n"
-            "We'll implement this section next!"
+            "🤖 AI Challenge\n\n"
+            "In this task, you are allowed to use "
+            "generative AI.\n\n"
+            "We'll implement this challenge next!"
         )
+
 
 
 def main():

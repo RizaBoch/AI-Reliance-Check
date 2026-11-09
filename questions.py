@@ -53,3 +53,25 @@ QUICK_CHECK = [
         ]
     }
 ]
+HABIT_CHECK = [
+    "When I receive a difficult task, using AI is one of the first solutions that comes to mind.",
+
+    "I open AI automatically, sometimes without thinking about whether I need it.",
+
+    "I find it difficult to start certain tasks without asking AI for help.",
+
+    "I ask AI for answers before trying to solve problems independently.",
+
+    "I use AI to generate ideas instead of thinking of my own ideas first.",
+
+    "I rely on AI to explain information that I could try to understand independently.",
+
+    "I use AI to make decisions that I could make on my own.",
+
+    "I feel uncomfortable when I cannot use AI for a task I normally complete with its help.",
+
+    "I often accept AI-generated answers without checking them carefully.",
+
+    "I can complete most of my usual tasks without AI, even if it takes more time."
+]
+
